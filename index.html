@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV Charging</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      input {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+      }
+      button {
+        padding: 10px;
+        background: blue;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>EV Charging Unit Recharge</h2>
+      <input type="text" id="name" placeholder="Enter Name" />
+      <input type="number" id="amount" placeholder="Enter Amount (Rs.)" />
+      <button onclick="rechargeUnits()">Submit</button>
+    </div>
+
+    <script>
+      const firebaseUrl =
+        "https://evprojecttesting-5acb8-default-rtdb.firebaseio.com/EVSession.json?auth=ATIkcTGOAqH2xPx7b4goiX8Jt8UnQOL7n6aUYdlR";
+
+      function rechargeUnits() {
+        const name = document.getElementById("name").value;
+        const amount = parseFloat(document.getElementById("amount").value);
+        if (!name || isNaN(amount) || amount <= 0) {
+          alert("Please enter valid details");
+          return;
+        }
+
+        const newUnits = amount / 5;
+
+        fetch(firebaseUrl, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ units: newUnits, switch: 1 }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            alert("Units updated successfully!");
+          })
+          .catch((error) => console.error("Error updating Firebase:", error));
+      }
+
+      function monitorUnits() {
+        fetch(firebaseUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.units === 0 && data.switch !== 0) {
+              fetch(firebaseUrl, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ switch: 0 }),
+              });
+              alert("Units are over. Switch turned off.");
+            }
+          })
+          .catch((error) => console.error("Error fetching data:", error));
+      }
+
+      setInterval(monitorUnits, 5000); // Check every 5 seconds
+    </script>
+  </body>
+</html>
